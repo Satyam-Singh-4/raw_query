@@ -221,6 +221,7 @@ const updateOne = async (req, res) => {
   } catch (error) {}
 };
 
+//delete 
 const deleteOne = async (req, res) => {
   try {
     let sql = `delete user from user
