@@ -17,6 +17,7 @@ const add = async (req, res) => {
       arr.push(data);
     });
     console.log(arr);
+
     con.query(query, [arr], function (err, result) {
       if (err) throw err;
       console.log("1 record inserted", result);
@@ -155,20 +156,18 @@ const bulkUpdate = async (req, res) => {
 };
 
 /**
- * @Relational_Operations
+ * @One_to_one
  */
 
 //Insertion
 
 const addData = async (req, res) => {
   try {
-    var sql = `INSERT INTO user(name,email,u_id) VALUES('${req.body.name}','${req.body.email}','${req.body.id}');
-    
-    INSERT INTO address(street,city,u_id) VALUES('${req.body.street}','${req.body.city}','${req.body.id}')`;
-    con.query(sql, (err, result) => {
-      if (err) throw err;
-      console.log(result);
-    });
+   // let body = req.body;
+    for (let index = 0; index < req.body.length; index++) {
+      const element = req.body[index];
+      console.log(element);
+    }
   } catch (error) {}
 };
 
@@ -221,7 +220,7 @@ const updateOne = async (req, res) => {
   } catch (error) {}
 };
 
-//delete 
+//delete
 const deleteOne = async (req, res) => {
   try {
     let sql = `delete user from user
@@ -236,6 +235,93 @@ const deleteOne = async (req, res) => {
   } catch (error) {}
 };
 
+/**
+ * @One_To_Many
+ */
+
+//Insertion
+
+const addValue = async (req, res) => {
+  try {
+    let sql = `INSERT INTO user(name,email) VALUES('${req.body.name}','${req.body.email}');
+    
+    INSERT INTO contact(u_id,phone_number) VALUES(LAST_INSERT_ID(),${req.body.phone[0]}),(LAST_INSERT_ID(),${req.body.phone[1]})`;
+
+    await con.query(sql, (err, result) => {
+      if (err) throw err;
+      console.log(result);
+      res.send(result);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+//findAll
+
+const searchAll = async (req, res) => {
+  try {
+    let sql = `select * from user cross join contact LIMIT ${req.body.limit} OFFSET ${req.body.offset} `;
+    con.query(sql, (err, result) => {
+      if (err) throw err;
+      console.log(result);
+      res.send(result);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+//FindOne
+
+const getOne = async (req, res) => {
+  try {
+    let sql = `SELECT * 
+    FROM user AS U INNER JOIN contact AS C ON C.u_id=U.u_id
+    where U.u_id=${req.body.id}`;
+    await con.query(sql, (err, result) => {
+      if (err) throw err;
+      console.log(result);
+      res.send(result);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+//Update_One
+
+const updateSingle = async (req, res) => {
+  try {
+    let sql = `update user 
+     INNER JOIN contact 
+     ON user.u_id=contact.u_id
+     set name='${req.body.name}'
+     where user.u_id=${req.body.id}`;
+
+    await con.query(sql, (err, result) => {
+      if (err) throw err;
+      console.log(result);
+      res.send(result);
+    });
+  } catch (error) {}
+};
+
+//Delete_Operation
+
+const deleteSingle = async (req, res) => {
+  try {
+    let sql = `delete user from user
+    INNER JOIN contact
+    ON contact.u_id=user.u_id
+    where user.u_id=${req.body.id}`;
+    await con.query(sql, (err, result) => {
+      if (err) throw err;
+      console.log(result);
+      res.send(result);
+    });
+  } catch (error) {}
+};
 module.exports = {
   add,
   getAll,
@@ -249,4 +335,9 @@ module.exports = {
   selectOne,
   updateOne,
   deleteOne,
+  addValue,
+  searchAll,
+  getOne,
+  updateSingle,
+  deleteSingle,
 };
